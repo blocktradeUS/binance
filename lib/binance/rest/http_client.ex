@@ -88,9 +88,9 @@ defmodule Binance.Rest.HTTPClient do
         {:error, {:http_error, err}}
 
       {:ok, response} ->
-        case Poison.decode(response.body) do
+        case Jason.decode(response.body) do
           {:ok, data} -> {:ok, data}
-          {:error, err} -> {:error, {:poison_decode_error, err}}
+          {:error, err} -> {:error, {:decode_error, err}}
         end
     end
   end
@@ -110,9 +110,9 @@ defmodule Binance.Rest.HTTPClient do
         {:error, {:http_error, err}}
 
       {:ok, response} ->
-        case Poison.decode(response.body) do
+        case Jason.decode(response.body) do
           {:ok, data} -> {:ok, data}
-          {:error, err} -> {:error, {:poison_decode_error, err}}
+          {:error, err} -> {:error, {:decode_error, err}}
         end
     end
   end
@@ -157,7 +157,7 @@ defmodule Binance.Rest.HTTPClient do
 
   defp parse_response({:ok, response}) do
     response.body
-    |> Poison.decode()
+    |> Jason.decode()
     |> parse_response_body
   end
 
@@ -173,7 +173,7 @@ defmodule Binance.Rest.HTTPClient do
   end
 
   defp parse_response_body({:error, err}) do
-    {:error, {:poison_decode_error, err}}
+    {:error, {:decode_error, err}}
   end
 
   defp prepare_query_params(params) do
@@ -183,11 +183,12 @@ defmodule Binance.Rest.HTTPClient do
     |> Enum.join("&")
   end
 
-    # TODO: remove when we require OTP 22.1
-    if Code.ensure_loaded?(:crypto) and function_exported?(:crypto, :mac, 4) do
-      defp generate_signature(digest, key, argument_string), do: :crypto.mac(:hmac, digest, key, argument_string)
-    else
-      defp generate_signature(digest, key, argument_string), do: :crypto.hmac(digest, key, argument_string)
-    end
-
+  # TODO: remove when we require OTP 22.1
+  if Code.ensure_loaded?(:crypto) and function_exported?(:crypto, :mac, 4) do
+    defp generate_signature(digest, key, argument_string),
+      do: :crypto.mac(:hmac, digest, key, argument_string)
+  else
+    defp generate_signature(digest, key, argument_string),
+      do: :crypto.hmac(digest, key, argument_string)
+  end
 end
